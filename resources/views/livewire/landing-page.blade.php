@@ -1,3 +1,12 @@
+@php
+    $navItems = \App\Models\NavItem::whereNull('parent_id')
+        ->where('is_active', true)
+        ->with(['children' => function($query) {
+            $query->where('is_active', true)->orderBy('order');
+        }])
+        ->orderBy('order')
+        ->get();
+@endphp
 <div x-data="{ scrolled: false }" @scroll.window="scrolled = (window.pageYOffset > 50)"
     class="min-h-screen bg-white text-slate-800 selection:bg-accent selection:text-white" x-init="window.addEventListener('redirect-to', e => {
         window.open(e.detail.url, '_blank');
@@ -43,36 +52,30 @@
 
             <!-- Menu Desktop -->
             <nav class="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-400">
-                <a href="#" class="relative py-1.5 hover:text-white transition-colors group">
-                    <span>Home</span>
-                    <span
-                        class="absolute bottom-0 left-0 w-0 h-0.5 bg-accent transition-all duration-300 group-hover:w-full"></span>
-                </a>
-                <a href="#about" class="relative py-1.5 hover:text-white transition-colors group">
-                    <span>Tentang Kami</span>
-                    <span
-                        class="absolute bottom-0 left-0 w-0 h-0.5 bg-accent transition-all duration-300 group-hover:w-full"></span>
-                </a>
-                <a href="#services" class="relative py-1.5 hover:text-white transition-colors group">
-                    <span>Layanan</span>
-                    <span
-                        class="absolute bottom-0 left-0 w-0 h-0.5 bg-accent transition-all duration-300 group-hover:w-full"></span>
-                </a>
-                <a href="#products" class="relative py-1.5 hover:text-white transition-colors group">
-                    <span>Produk</span>
-                    <span
-                        class="absolute bottom-0 left-0 w-0 h-0.5 bg-accent transition-all duration-300 group-hover:w-full"></span>
-                </a>
-                <a href="#team" class="relative py-1.5 hover:text-white transition-colors group">
-                    <span>Tim</span>
-                    <span
-                        class="absolute bottom-0 left-0 w-0 h-0.5 bg-accent transition-all duration-300 group-hover:w-full"></span>
-                </a>
-                <a href="#faq" class="relative py-1.5 hover:text-white transition-colors group">
-                    <span>FAQ</span>
-                    <span
-                        class="absolute bottom-0 left-0 w-0 h-0.5 bg-accent transition-all duration-300 group-hover:w-full"></span>
-                </a>
+                @foreach ($navItems as $item)
+                    @if ($item->children->count() > 0)
+                        <!-- Dropdown Menu -->
+                        <div class="relative" x-data="{ open: false }">
+                            <button @click="open = !open" @click.outside="open = false" class="flex items-center gap-1.5 py-1.5 hover:text-white transition-colors focus:outline-none">
+                                <span>{{ $item->label }}</span>
+                                <x-lucide-chevron-down class="w-3.5 h-3.5 transition-transform duration-200" ::class="open ? 'rotate-180' : ''" />
+                            </button>
+                            <div x-show="open" x-transition class="absolute top-full left-0 mt-2 w-48 bg-slate-900 border border-slate-800/80 rounded-xl p-2 shadow-2xl space-y-1 z-55" style="display: none;">
+                                @foreach ($item->children as $child)
+                                    <a href="{{ $child->url ?: '/' }}" class="block px-3 py-2 text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-all">
+                                        {{ $child->label }}
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @else
+                        <!-- Simple Link -->
+                        <a href="{{ $item->url ?: '#' }}" class="relative py-1.5 hover:text-white transition-colors group">
+                            <span>{{ $item->label }}</span>
+                            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-accent transition-all duration-300 group-hover:w-full"></span>
+                        </a>
+                    @endif
+                @endforeach
             </nav>
 
             <!-- CTA Button -->
@@ -94,18 +97,27 @@
                 <div x-show="open" @click.outside="open = false" x-transition
                     class="absolute top-full left-0 right-0 mt-2 bg-primary/98 backdrop-blur-lg border border-slate-800 rounded-lg p-5 shadow-2xl space-y-4"
                     style="display: none;">
-                    <a @click="open = false" href="#"
-                        class="block text-slate-300 hover:text-white text-sm font-semibold py-2">Home</a>
-                    <a @click="open = false" href="#about"
-                        class="block text-slate-300 hover:text-white text-sm font-semibold py-2">Tentang Kami</a>
-                    <a @click="open = false" href="#services"
-                        class="block text-slate-300 hover:text-white text-sm font-semibold py-2">Layanan</a>
-                    <a @click="open = false" href="#products"
-                        class="block text-slate-300 hover:text-white text-sm font-semibold py-2">Produk</a>
-                    <a @click="open = false" href="#team"
-                        class="block text-slate-300 hover:text-white text-sm font-semibold py-2">Tim</a>
-                    <a @click="open = false" href="#faq"
-                        class="block text-slate-300 hover:text-white text-sm font-semibold py-2">FAQ</a>
+                    @foreach ($navItems as $item)
+                        @if ($item->children->count() > 0)
+                            <div x-data="{ openSub: false }">
+                                <button @click="openSub = !openSub" class="w-full flex items-center justify-between text-slate-300 hover:text-white text-sm font-semibold py-2 text-left focus:outline-none">
+                                    <span>{{ $item->label }}</span>
+                                    <x-lucide-chevron-down class="w-4 h-4 transition-transform" ::class="openSub ? 'rotate-180' : ''" />
+                                </button>
+                                <div x-show="openSub" x-transition class="pl-4 space-y-2 mt-1" style="display: none;">
+                                    @foreach ($item->children as $child)
+                                        <a @click="$parent.open = false" href="{{ $child->url ?: '#' }}" class="block text-slate-400 hover:text-white text-xs font-semibold py-1.5">
+                                            {{ $child->label }}
+                                        </a>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @else
+                            <a @click="open = false" href="{{ $item->url ?: '#' }}" class="block text-slate-300 hover:text-white text-sm font-semibold py-2">
+                                {{ $item->label }}
+                            </a>
+                        @endif
+                    @endforeach
                     <a @click="open = false" href="#contact"
                         class="block w-full text-center px-4 py-2.5 bg-accent text-white text-xs font-bold rounded-lg hover:bg-accent/90 transition-colors">Hubungi
                         Kami</a>
@@ -256,191 +268,76 @@
         </section>
     @endif
 
-    <!-- 4. Tentang Kami / Why Us (BAB 5, Section 5) -->
-    @if (isset($sections['about_us']) || isset($sections['why_us']))
-        <section id="about" class="py-20 md:py-28 bg-white">
-            <div class="max-w-7xl mx-auto px-6 space-y-24">
-
-                <!-- Section About Us -->
-                @if (isset($sections['about_us']))
-                    @php $about = $sections['about_us']; @endphp
+    <!-- 4. Dynamic Sections -->
+    @if ($sections->isNotEmpty())
+        <section id="about" class="py-20 md:py-28 bg-white overflow-hidden">
+            <div class="max-w-7xl mx-auto px-6 space-y-24 md:space-y-32">
+                @foreach($sections as $key => $section)
                     <div x-data="{ shown: false }" x-intersect.margin.-15%="shown = true"
                         :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'"
-                        class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center transition-all duration-700 ease-out">
+                        class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center transition-all duration-700 ease-out">
+                        
                         <!-- Text -->
-                        <div class="space-y-6">
-                            <span
-                                class="text-xs font-bold text-accent uppercase tracking-widest">{{ $about->subtitle }}</span>
-                            <h2 class="text-3xl md:text-4xl font-extrabold text-primary leading-tight font-sans">
-                                {{ $about->title }}</h2>
-                            <p class="text-sm md:text-base text-slate-500 leading-relaxed whitespace-pre-line">
-                                {{ $about->content }}
-                            </p>
-                        </div>
-
-                        <!-- Image / Graphic -->
-                        <div class="relative flex justify-center">
-                            @if ($about->getFirstMediaUrl('image'))
-                                <div
-                                    class="w-full max-w-md aspect-[4/3] rounded-xl overflow-hidden shadow-lg border border-slate-200">
-                                    <img src="{{ $about->getFirstMediaUrl('image') }}"
-                                        class="w-full h-full object-cover" />
-                                </div>
-                            @else
-                                <!-- Statistics / Experience Trust Box -->
-                                <div
-                                    class="w-full max-w-md bg-primary text-white rounded-xl p-8 border border-slate-800 shadow-2xl grid grid-cols-2 gap-8 relative overflow-hidden">
-                                    <!-- Background shape -->
-                                    <div
-                                        class="absolute -right-10 -bottom-10 w-40 h-40 bg-accent rounded-full opacity-10">
-                                    </div>
-
-                                    <div class="col-span-2 pb-4 border-b border-slate-800">
-                                        <h3 class="text-sm font-bold text-accent uppercase tracking-widest">Techira
-                                            Trust Stats</h3>
-                                        <p class="text-xs text-slate-400 mt-1">Metrik keberhasilan operasional
-                                            teknologi.</p>
-                                    </div>
-
-                                    <!-- Stat 1 -->
-                                    <div x-data="{ count: 0, target: 6, start() { let interval = setInterval(() => { if (this.count < this.target) { this.count++; } else { clearInterval(interval); } }, 250) } }" x-intersect.once="start()">
-                                        <h4 class="text-4xl font-black text-white"><span x-text="count">0</span>+</h4>
-                                        <p
-                                            class="text-[10px] text-slate-400 mt-1 font-semibold uppercase tracking-wider">
-                                            Tahun Pengalaman</p>
-                                    </div>
-
-                                    <!-- Stat 2 -->
-                                    <div x-data="{ count: 0, target: 80, start() { let interval = setInterval(() => { if (this.count < this.target) { this.count += 2; } else { this.count = this.target;
-                                                    clearInterval(interval); } }, 25) } }" x-intersect.once="start()">
-                                        <h4 class="text-4xl font-black text-white"><span x-text="count">0</span>+</h4>
-                                        <p
-                                            class="text-[10px] text-slate-400 mt-1 font-semibold uppercase tracking-wider">
-                                            Klien Korporat</p>
-                                    </div>
-
-                                    <!-- Stat 3 -->
-                                    <div x-data="{ count: 0, target: 120, start() { let interval = setInterval(() => { if (this.count < this.target) { this.count += 4; } else { this.count = this.target;
-                                                    clearInterval(interval); } }, 25) } }" x-intersect.once="start()">
-                                        <h4 class="text-4xl font-black text-white"><span x-text="count">0</span>+</h4>
-                                        <p
-                                            class="text-[10px] text-slate-400 mt-1 font-semibold uppercase tracking-wider">
-                                            Proyek Sukses</p>
-                                    </div>
-
-                                    <!-- Stat 4 -->
-                                    <div x-data="{ count: 0, target: 99, start() { let interval = setInterval(() => { if (this.count < this.target) { this.count++; } else { clearInterval(interval); } }, 20) } }" x-intersect.once="start()">
-                                        <h4 class="text-4xl font-black text-white"><span x-text="count">0</span>%</h4>
-                                        <p
-                                            class="text-[10px] text-slate-400 mt-1 font-semibold uppercase tracking-wider">
-                                            Customer SLA</p>
-                                    </div>
-                                </div>
+                        <div class="space-y-6 {{ $loop->iteration % 2 == 0 ? 'order-last lg:order-last' : 'order-last lg:order-first' }}">
+                            @if($section->subtitle)
+                                <span class="text-xs font-bold text-accent uppercase tracking-widest">{{ $section->subtitle }}</span>
                             @endif
-                        </div>
-                    </div>
-                @endif
-
-                <!-- Section Why Us -->
-                @if (isset($sections['why_us']))
-                    @php $why = $sections['why_us']; @endphp
-                    <div x-data="{ shown: false }" x-intersect.margin.-15%="shown = true"
-                        :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'"
-                        class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center transition-all duration-700 ease-out">
-                        <!-- Image Area / Fallback Stats -->
-                        <div class="relative flex justify-center order-last lg:order-first">
-                            @if ($why->getFirstMediaUrl('image'))
-                                <div
-                                    class="w-full max-w-md aspect-[4/3] rounded-xl overflow-hidden shadow-lg border border-slate-200">
-                                    <img src="{{ $why->getFirstMediaUrl('image') }}"
-                                        class="w-full h-full object-cover" />
-                                </div>
-                            @else
-                                <div class="w-full max-w-md flex flex-col gap-6">
-                                    <!-- Card 1 -->
-                                    <div
-                                        class="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm shadow-slate-100/50 hover:shadow-lg hover:shadow-slate-200/50 transition-all duration-300 hover:-translate-y-1">
-                                        <div class="flex items-center gap-4">
-                                            <div class="p-3 bg-accent/10 rounded-xl text-accent">
-                                                <x-lucide-shield class="w-6 h-6" />
-                                            </div>
-                                            <div>
-                                                <h4 class="font-bold text-primary text-sm tracking-wide">Security
-                                                    Compliance</h4>
-                                                <p class="text-xs text-accent mt-0.5 font-semibold">Standard ISO 27001
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <p class="text-xs text-slate-500 leading-relaxed mt-3">Seluruh proses
-                                            pengembangan software dan infrastruktur cloud kami diaudit dengan standard
-                                            ISO 27001 secara konsisten demi keamanan data Anda.</p>
-                                    </div>
-
-                                    <!-- Card 2 -->
-                                    <div
-                                        class="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm shadow-slate-100/50 hover:shadow-lg hover:shadow-slate-200/50 transition-all duration-300 hover:-translate-y-1">
-                                        <div class="flex items-center gap-4">
-                                            <div class="p-3 bg-accent/10 rounded-xl text-accent">
-                                                <x-lucide-zap class="w-6 h-6" />
-                                            </div>
-                                            <div>
-                                                <h4 class="font-bold text-primary text-sm tracking-wide">Agile
-                                                    Methodology</h4>
-                                                <p class="text-xs text-accent mt-0.5 font-semibold">Sprint Delivery 2
-                                                    Mingguan</p>
-                                            </div>
-                                        </div>
-                                        <p class="text-xs text-slate-500 leading-relaxed mt-3">Pengiriman modul
-                                            bertahap setiap 2 minggu agar Anda memiliki visibilitas penuh dan kontrol
-                                            terhadap perkembangan proyek Anda.</p>
-                                    </div>
-                                </div>
-                            @endif
-                        </div>
-
-                        <!-- Text -->
-                        <div class="space-y-6">
-                            <span
-                                class="text-xs font-bold text-accent uppercase tracking-widest">{{ $why->subtitle }}</span>
                             <h2 class="text-3xl md:text-4xl font-extrabold text-primary leading-tight font-sans">
-                                {{ $why->title }}</h2>
-
+                                {{ $section->title }}
+                            </h2>
+                            
                             @php
-                                $paragraphs = explode("\n", $why->content);
-                                $intro = $paragraphs[0] ?? '';
+                                $paragraphs = explode("\n", $section->content);
                                 $listItems = [];
+                                $textParagraphs = [];
                                 foreach ($paragraphs as $p) {
-                                    if (preg_match('/^\d+\.\s*(.*)/', trim($p), $matches)) {
+                                    if (preg_match('/^\d+\.\s*(.*)/', trim($p), $matches) || preg_match('/^-\s*(.*)/', trim($p), $matches)) {
                                         $listItems[] = $matches[1];
+                                    } else if (trim($p) !== '') {
+                                        $textParagraphs[] = trim($p);
                                     }
                                 }
                             @endphp
 
-                            <p class="text-sm md:text-base text-slate-500 leading-relaxed">
-                                {{ $intro }}
-                            </p>
+                            <div class="text-sm md:text-base text-slate-500 leading-relaxed space-y-4">
+                                @foreach($textParagraphs as $tp)
+                                    <p>{{ $tp }}</p>
+                                @endforeach
+                            </div>
 
                             @if (!empty($listItems))
                                 <ul class="space-y-4 pt-2">
                                     @foreach ($listItems as $item)
                                         <li class="flex items-start gap-3 text-slate-600 text-sm font-medium">
-                                            <div
-                                                class="flex-shrink-0 w-5 h-5 rounded-full bg-accent/10 flex items-center justify-center text-accent mt-0.5">
+                                            <div class="flex-shrink-0 w-5 h-5 rounded-full bg-accent/10 flex items-center justify-center text-accent mt-0.5">
                                                 <x-lucide-check class="w-3.5 h-3.5" />
                                             </div>
                                             <span>{{ $item }}</span>
                                         </li>
                                     @endforeach
                                 </ul>
+                            @endif
+                        </div>
+
+                        <!-- Image / Graphic -->
+                        <div class="relative flex justify-center {{ $loop->iteration % 2 == 0 ? 'order-first lg:order-first' : 'order-first lg:order-last' }}">
+                            @if ($section->getFirstMediaUrl('image'))
+                                <div class="w-full max-w-md md:max-w-lg aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl shadow-slate-200/50 border border-slate-100 group relative">
+                                    <div class="absolute inset-0 bg-accent/10 group-hover:bg-transparent transition-colors duration-500 z-10 pointer-events-none"></div>
+                                    <img src="{{ $section->getFirstMediaUrl('image') }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                                </div>
                             @else
-                                <p class="text-sm md:text-base text-slate-500 leading-relaxed whitespace-pre-line">
-                                    {{ $why->content }}
-                                </p>
+                                <!-- Dynamic Pattern Box if no image -->
+                                <div class="w-full max-w-md md:max-w-lg aspect-[4/3] rounded-2xl bg-slate-900 border border-slate-800 flex flex-col items-center justify-center shadow-2xl relative overflow-hidden group">
+                                    <div class="absolute inset-0 bg-[linear-gradient(to_right,#334155_1px,transparent_1px),linear-gradient(to_bottom,#334155_1px,transparent_1px)] bg-[size:2rem_2rem] opacity-20"></div>
+                                    <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-accent rounded-full opacity-10 group-hover:scale-150 transition-transform duration-700"></div>
+                                    <x-lucide-layers class="w-16 h-16 text-slate-700 mb-4 group-hover:text-accent transition-colors duration-500 relative z-10" />
+                                    <span class="text-slate-500 font-mono text-sm tracking-widest relative z-10 group-hover:text-white transition-colors duration-500">TECHIRA.{{ strtoupper($key) }}</span>
+                                </div>
                             @endif
                         </div>
                     </div>
-                @endif
-
+                @endforeach
             </div>
         </section>
     @endif
@@ -501,16 +398,23 @@
                                 @endif
                             </div>
 
-                            <!-- WhatsApp button -->
+                            <!-- Action button -->
                             <div class="mt-8 pt-4 border-t border-slate-100">
-                                <button wire:click="trackServiceWa({{ $service->id }})"
+                                <a href="{{ route('services.show', $service->slug) }}"
                                     class="w-full flex items-center justify-center gap-2 py-2 border border-slate-200 hover:border-accent hover:bg-accent hover:text-white rounded-lg text-xs font-semibold text-slate-700 transition-all focus:outline-none">
-                                    <x-lucide-phone-call class="w-4 h-4" />
-                                    <span>Tanya via WhatsApp</span>
-                                </button>
+                                    <x-lucide-arrow-right class="w-4 h-4" />
+                                    <span>Lihat Detail</span>
+                                </a>
                             </div>
                         </div>
                     @endforeach
+                </div>
+
+                <div class="mt-12 text-center">
+                    <a href="{{ route('services.index') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 hover:border-accent text-slate-700 hover:text-accent font-semibold rounded-lg shadow-sm transition-all text-sm group">
+                        <span>Lihat Semua Layanan</span>
+                        <x-lucide-arrow-right class="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                    </a>
                 </div>
             </div>
         </section>
@@ -572,17 +476,24 @@
                                         {{ $product->short_description }}</p>
                                 </div>
 
-                                <!-- WA action button -->
+                                <!-- Action button -->
                                 <div class="mt-8 pt-4 border-t border-slate-100">
-                                    <button wire:click="trackProductWa({{ $product->id }})"
+                                    <a href="{{ route('products.show', $product->slug) }}"
                                         class="w-full flex items-center justify-center gap-2 py-2.5 bg-accent hover:bg-accent/90 text-white font-semibold rounded-lg text-xs transition-colors shadow-sm focus:outline-none">
-                                        <x-lucide-phone-call class="w-4 h-4" />
-                                        <span>Tanya via WhatsApp</span>
-                                    </button>
+                                        <x-lucide-eye class="w-4 h-4" />
+                                        <span>Lihat Detail</span>
+                                    </a>
                                 </div>
                             </div>
                         </div>
                     @endforeach
+                </div>
+
+                <div class="mt-12 text-center">
+                    <a href="{{ route('products.index') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 hover:border-accent text-slate-700 hover:text-accent font-semibold rounded-lg shadow-sm transition-all text-sm group">
+                        <span>Lihat Semua Produk</span>
+                        <x-lucide-arrow-right class="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                    </a>
                 </div>
             </div>
         </section>

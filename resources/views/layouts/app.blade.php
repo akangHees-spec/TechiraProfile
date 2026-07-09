@@ -95,6 +95,13 @@
                 <span>Konten Halaman</span>
             </a>
 
+            <!-- Navigation Menu (Navbar) -->
+            <a href="{{ route('admin.navbar') }}" wire:navigate
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('admin.navbar*') ? 'bg-slate-800 border-l-4 border-accent text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white' }}">
+                <x-lucide-menu class="w-4 h-4" />
+                <span>Menu Navigasi</span>
+            </a>
+
             <!-- Testimonials -->
             <a href="{{ route('admin.testimonials') }}" wire:navigate
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('admin.testimonials*') ? 'bg-slate-800 border-l-4 border-accent text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white' }}">

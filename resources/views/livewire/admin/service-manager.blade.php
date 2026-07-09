@@ -332,6 +332,7 @@
                             <th class="py-3.5 px-5">Nama Layanan</th>
                             <th class="py-3.5 px-5">Kategori</th>
                             <th class="py-3.5 px-5 font-semibold text-center w-20">Urutan</th>
+                            <th class="py-3.5 px-5 w-24 text-center">Unggulan</th>
                             <th class="py-3.5 px-5 w-24">Status</th>
                             <th class="py-3.5 px-5 w-32 text-right">Aksi</th>
                         </tr>
@@ -381,6 +382,19 @@
                                 </td>
                                 <td class="py-3.5 px-5 text-center font-bold text-xs text-slate-600">
                                     {{ $service->order }}
+                                </td>
+                                <td class="py-3.5 px-5 text-center">
+                                    <button wire:click="toggleFeatured({{ $service->id }})" class="focus:outline-none">
+                                        @if ($service->is_featured)
+                                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-success text-white shadow-sm">
+                                                Unggulan
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-200 text-slate-700 shadow-sm">
+                                                Biasa
+                                            </span>
+                                        @endif
+                                    </button>
                                 </td>
                                 <td class="py-3.5 px-5">
                                     <button wire:click="toggleActive({{ $service->id }})" class="focus:outline-none">

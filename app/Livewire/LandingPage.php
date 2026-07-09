@@ -2,26 +2,31 @@
 
 namespace App\Livewire;
 
-use Livewire\Component;
-use App\Models\Slider;
-use App\Models\Partner;
 use App\Models\Category;
+use App\Models\ContactMessage;
+use App\Models\Faq;
+use App\Models\PageSection;
+use App\Models\Partner;
 use App\Models\Product;
 use App\Models\Service;
-use App\Models\PageSection;
+use App\Models\Setting;
+use App\Models\Slider;
 use App\Models\TeamMember;
 use App\Models\Testimonial;
-use App\Models\Faq;
-use App\Models\ContactMessage;
-use App\Models\Setting;
+use Illuminate\Contracts\View\View;
+use Livewire\Component;
 
 class LandingPage extends Component
 {
     // Contact form fields
     public $name = '';
+
     public $email = '';
+
     public $phone = '';
+
     public $subject = '';
+
     public $message = '';
 
     public function submitContact(): void
@@ -57,7 +62,7 @@ class LandingPage extends Component
     {
         $product = Product::findOrFail($id);
         $product->increment('whatsapp_click_count');
-        
+
         $this->dispatch('redirect-to', url: $product->whatsapp_link);
     }
 
@@ -69,25 +74,25 @@ class LandingPage extends Component
         $this->dispatch('redirect-to', url: $service->whatsapp_link);
     }
 
-    public function render(): \Illuminate\Contracts\View\View
+    public function render(): View
     {
         $sliders = Slider::where('is_active', true)->orderBy('order')->get();
         $partners = Partner::where('is_active', true)->orderBy('order')->get();
         $categories = Category::where('is_active', true)->orderBy('order')->get();
-        
+
         $featuredProducts = Product::where('is_active', true)
             ->where('is_featured', true)
             ->with('category')
             ->orderBy('order')
             ->get();
-            
+
         $featuredServices = Service::where('is_active', true)
             ->where('is_featured', true)
             ->with(['category', 'features'])
             ->orderBy('order')
             ->get();
 
-        $sections = PageSection::where('is_active', true)->get()->keyBy('section_key');
+        $sections = PageSection::where('is_active', true)->orderBy('order')->get()->keyBy('section_key');
         $team = TeamMember::where('is_active', true)->orderBy('order')->get();
         $testimonials = Testimonial::where('is_active', true)->orderBy('order')->get();
         $faqs = Faq::where('is_active', true)->orderBy('order')->get();
@@ -110,7 +115,7 @@ class LandingPage extends Component
         ];
 
         return view('livewire.landing-page', [
-            'sliders' => $sliders,  
+            'sliders' => $sliders,
             'partners' => $partners,
             'categories' => $categories,
             'featuredProducts' => $featuredProducts,
