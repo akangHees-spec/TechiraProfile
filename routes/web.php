@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Livewire\BlogDetail;
+use App\Livewire\BlogIndex;
 use App\Livewire\ProductDetail;
 use App\Livewire\ProductList;
 use App\Livewire\ServiceDetail;
@@ -19,6 +21,8 @@ Route::get('/products', ProductList::class)->name('products.index');
 Route::get('/products/{slug}', ProductDetail::class)->name('products.show');
 Route::get('/services', ServiceList::class)->name('services.index');
 Route::get('/services/{slug}', ServiceDetail::class)->name('services.show');
+Route::get('/blog', BlogIndex::class)->name('blog.index');
+Route::get('/blog/{slug}', BlogDetail::class)->name('blog.show');
 
 Route::get('/dashboard', function () {
     return view('dashboard');
@@ -66,6 +70,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/navbar', function () {
         return view('admin.navbar');
     })->name('admin.navbar');
+    Route::get('/admin/posts', function () {
+        return view('admin.posts');
+    })->name('admin.posts');
 });
 
 require __DIR__.'/auth.php';

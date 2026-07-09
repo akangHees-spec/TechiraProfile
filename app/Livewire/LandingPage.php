@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\Category;
 use App\Models\ContactMessage;
 use App\Models\Faq;
+use App\Models\NavItem;
 use App\Models\PageSection;
 use App\Models\Partner;
 use App\Models\Product;
@@ -96,6 +97,7 @@ class LandingPage extends Component
         $team = TeamMember::where('is_active', true)->orderBy('order')->get();
         $testimonials = Testimonial::where('is_active', true)->orderBy('order')->get();
         $faqs = Faq::where('is_active', true)->orderBy('order')->get();
+        $navItems = NavItem::where('is_active', true)->whereNull('parent_id')->orderBy('order')->get();
 
         // Get global settings for landing page footer/contacts
         $settingsRaw = Setting::all()->pluck('value', 'key');
@@ -125,6 +127,7 @@ class LandingPage extends Component
             'testimonials' => $testimonials,
             'faqs' => $faqs,
             'settings' => $settings,
+            'navItems' => $navItems,
         ]);
     }
 }

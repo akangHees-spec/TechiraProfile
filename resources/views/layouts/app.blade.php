@@ -20,6 +20,10 @@
 
     <!-- SortableJS for Drag and Drop sorting -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+    <!-- Quill Rich Text Editor -->
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
 </head>
 
 <body class="font-sans antialiased bg-[#F8FAFC] text-[#0F172A]" x-data="{ sidebarOpen: false }">
@@ -75,6 +79,13 @@
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('admin.services*') ? 'bg-slate-800 border-l-4 border-accent text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white' }}">
                 <x-lucide-briefcase class="w-4 h-4" />
                 <span>Layanan Jasa</span>
+            </a>
+
+            <!-- Blog -->
+            <a href="{{ route('admin.posts') }}" wire:navigate
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('admin.posts*') ? 'bg-slate-800 border-l-4 border-accent text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white' }}">
+                <x-lucide-newspaper class="w-4 h-4" />
+                <span>Blog / Artikel</span>
             </a>
 
             <div class="pt-4 pb-2">

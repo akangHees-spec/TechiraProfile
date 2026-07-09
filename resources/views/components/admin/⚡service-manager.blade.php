@@ -29,6 +29,9 @@ new class extends Component
     public $is_active = true;
     public $order = 0;
 
+    // Display mode: 'icon' or 'image'
+    public $imageMode = 'icon'; // default to icon
+
     // Dynamic Service Features Input
     public $featuresInput = []; // [['title' => '', 'icon' => 'check']]
 
@@ -129,6 +132,7 @@ new class extends Component
         $this->is_active = (bool) $service->is_active;
         $this->order = $service->order;
         $this->existingImageUrl = $service->getFirstMediaUrl('image');
+        $this->imageMode = $this->existingImageUrl ? 'image' : 'icon';
 
         // Load features
         $features = $service->features()->get();
@@ -235,6 +239,7 @@ new class extends Component
         $this->is_featured = false;
         $this->is_active = true;
         $this->order = 0;
+        $this->imageMode = 'icon';
         $this->featuresInput = [];
         $this->imageFile = null;
         $this->existingImageUrl = null;
@@ -357,38 +362,84 @@ new class extends Component
                             @error('category_id') <span class="text-xs text-danger mt-1 block">{{ $message }}</span> @enderror
                         </div>
 
-                        <!-- Icon Key -->
+                        <!-- Display Mode Toggle -->
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-semibold text-primary uppercase tracking-wider mb-2">Tampilkan Sebagai</label>
+                            <div class="flex rounded-lg border border-slate-200 overflow-hidden w-fit">
+                                <button type="button"
+                                    wire:click="$set('imageMode', 'icon')"
+                                    class="px-4 py-2 text-xs font-semibold transition-colors {{ $imageMode === 'icon' ? 'bg-accent text-white' : 'bg-white text-slate-600 hover:bg-slate-50' }}">
+                                    <span class="flex items-center gap-1.5">
+                                        <x-lucide-zap class="w-3.5 h-3.5" />
+                                        Ikon
+                                    </span>
+                                </button>
+                                <button type="button"
+                                    wire:click="$set('imageMode', 'image')"
+                                    class="px-4 py-2 text-xs font-semibold transition-colors {{ $imageMode === 'image' ? 'bg-accent text-white' : 'bg-white text-slate-600 hover:bg-slate-50' }}">
+                                    <span class="flex items-center gap-1.5">
+                                        <x-lucide-image class="w-3.5 h-3.5" />
+                                        Foto
+                                    </span>
+                                </button>
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-1.5">
+                                @if ($imageMode === 'icon') Gunakan ikon Lucide untuk ditampilkan di card layanan.
+                                @else Gunakan foto/gambar untuk ditampilkan di card layanan.
+                                @endif
+                            </p>
+                        </div>
+
+                        <!-- Icon Key (shown when mode = icon) -->
+                        @if ($imageMode === 'icon')
                         <div>
                             <label class="block text-xs font-semibold text-primary uppercase tracking-wider mb-2">Kode Ikon Lucide</label>
-                            <input 
-                                type="text" 
+                            <input
+                                type="text"
                                 wire:model="icon"
                                 class="w-full px-3.5 py-2 border border-slate-200 rounded-lg text-sm bg-white text-primary focus:outline-none focus:border-accent"
                                 placeholder="Contoh: smartphone, globe, check"
                             />
+                            <p class="text-[11px] text-slate-400 mt-1">Cari nama ikon di <a href="https://lucide.dev" target="_blank" class="text-accent hover:underline">lucide.dev</a></p>
                             @error('icon') <span class="text-xs text-danger mt-1 block">{{ $message }}</span> @enderror
                         </div>
+                        @endif
 
                         <!-- Order -->
                         <div>
                             <label class="block text-xs font-semibold text-primary uppercase tracking-wider mb-2">Urutan (Order)</label>
-                            <input 
-                                type="number" 
+                            <input
+                                type="number"
                                 wire:model="order"
                                 class="w-full px-3.5 py-2 border border-slate-200 rounded-lg text-sm bg-white text-primary focus:outline-none"
                             />
                         </div>
 
-                        <!-- Image File -->
+                        <!-- Image Upload (shown when mode = image) -->
+                        @if ($imageMode === 'image')
                         <div class="md:col-span-2">
                             <label class="block text-xs font-semibold text-primary uppercase tracking-wider mb-2">Gambar Layanan (Cover)</label>
-                            <input 
-                                type="file" 
+                            @if ($existingImageUrl && !$imageFile)
+                                <div class="mb-3 relative inline-block">
+                                    <img src="{{ $existingImageUrl }}" class="h-24 rounded-lg border border-slate-200 object-cover" />
+                                    <span class="absolute -top-2 -right-2 bg-success text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">Terpasang</span>
+                                </div>
+                            @endif
+                            <input
+                                type="file"
                                 wire:model="imageFile"
+                                accept="image/*"
                                 class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-primary hover:file:bg-slate-200"
                             />
+                            @if ($imageFile)
+                                <div class="mt-2">
+                                    <img src="{{ $imageFile->temporaryUrl() }}" class="h-20 rounded-lg object-cover border border-slate-200" />
+                                    <p class="text-[11px] text-success mt-1">Pratinjau gambar baru</p>
+                                </div>
+                            @endif
                             @error('imageFile') <span class="text-xs text-danger mt-1 block">{{ $message }}</span> @enderror
                         </div>
+                        @endif
 
                         <!-- Short Description -->
                         <div class="md:col-span-2">

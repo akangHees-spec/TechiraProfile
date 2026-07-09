@@ -3,30 +3,33 @@
 namespace App\Livewire;
 
 use App\Models\NavItem;
-use App\Models\Product;
+use App\Models\Post;
 use App\Models\Setting;
 use Livewire\Component;
 
-class ProductDetail extends Component
+class BlogDetail extends Component
 {
-    public $product;
+    public $slug;
 
-    public function mount($slug)
+    public function mount($slug): void
     {
-        $this->product = Product::where('slug', $slug)
-            ->where('is_active', true)
-            ->with('category')
-            ->firstOrFail();
-    }
-
-    public function trackWa()
-    {
-        $this->product->increment('whatsapp_click_count');
-        $this->dispatch('redirect-to', url: $this->product->whatsapp_link);
+        $this->slug = $slug;
     }
 
     public function render()
     {
+        $post = Post::where('slug', $this->slug)
+            ->where('is_published', true)
+            ->firstOrFail();
+
+        // Get recent posts for "Read More" section
+        $recentPosts = Post::where('is_published', true)
+            ->where('id', '!=', $post->id)
+            ->orderBy('published_at', 'desc')
+            ->orderBy('id', 'desc')
+            ->take(3)
+            ->get();
+
         $settingsRaw = Setting::all()->pluck('value', 'key');
         $settings = [
             'company_name' => $settingsRaw['company_name'] ?? 'Techira Nusantara',
@@ -39,7 +42,9 @@ class ProductDetail extends Component
 
         $navItems = NavItem::where('is_active', true)->whereNull('parent_id')->orderBy('order')->get();
 
-        return view('livewire.product-detail', [
+        return view('livewire.blog-detail', [
+            'post' => $post,
+            'recentPosts' => $recentPosts,
             'settings' => $settings,
             'navItems' => $navItems,
         ])->layout('components.layouts.guest');

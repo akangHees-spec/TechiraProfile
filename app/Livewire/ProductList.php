@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\Category;
+use App\Models\NavItem;
 use App\Models\Product;
 use App\Models\Setting;
 use Livewire\Component;
@@ -28,10 +29,13 @@ class ProductList extends Component
             'youtube_url' => $settingsRaw['youtube_url'] ?? '#',
         ];
 
+        $navItems = NavItem::where('is_active', true)->whereNull('parent_id')->orderBy('order')->get();
+
         return view('livewire.product-list', [
             'products' => $products,
             'categories' => $categories,
             'settings' => $settings,
+            'navItems' => $navItems,
         ])->layout('components.layouts.guest');
     }
 }

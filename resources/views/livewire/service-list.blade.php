@@ -1,44 +1,6 @@
 <div class="min-h-screen bg-slate-950 text-slate-300 selection:bg-accent selection:text-white" x-data="{ scrolled: false, activeCategory: 'all' }" @scroll.window="scrolled = (window.pageYOffset > 20)" x-init="window.addEventListener('redirect-to', e => { window.open(e.detail.url, '_blank'); });">
     
-    <!-- Navbar -->
-    <header :class="scrolled ? 'bg-slate-950/90 backdrop-blur-xl border-b border-slate-800/40 shadow-lg shadow-black/20 py-3' : 'bg-slate-950 py-4'" class="sticky top-0 z-50 transition-all duration-300">
-        <div class="max-w-7xl mx-auto px-6 flex items-center justify-between">
-            <a href="/" class="flex items-center gap-2 font-extrabold text-xl tracking-wider text-white transition-transform duration-300 hover:scale-[1.02]">
-                @if ($settings['logo'])
-                    <img src="{{ $settings['logo'] }}" alt="{{ $settings['company_name'] }}" class="h-8 max-w-[150px] object-contain" />
-                @else
-                    <x-lucide-terminal class="w-6 h-6 text-accent" />
-                @endif
-                <span>{{ $settings['company_name'] }}</span>
-            </a>
-            
-            <nav class="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-400">
-                <a href="/" class="relative py-1.5 hover:text-white transition-colors group"><span>Home</span></a>
-                <a href="{{ route('products.index') }}" class="relative py-1.5 hover:text-white transition-colors group"><span>Produk</span></a>
-                <a href="{{ route('services.index') }}" class="relative py-1.5 text-white transition-colors group">
-                    <span>Layanan</span>
-                    <span class="absolute bottom-0 left-0 w-full h-0.5 bg-accent"></span>
-                </a>
-            </nav>
-
-            <div class="hidden md:flex items-center gap-4">
-                <a href="/#contact" class="px-5 py-2.5 bg-gradient-to-r from-accent to-indigo-600 text-white font-bold text-xs rounded-lg shadow-md transition-all hover:shadow-lg hover:shadow-accent/20">Hubungi Kami</a>
-            </div>
-            
-            <!-- Hamburger Button (Mobile) -->
-            <div class="md:hidden" x-data="{ open: false }">
-                <button @click="open = !open" class="text-white hover:text-accent focus:outline-none">
-                    <x-lucide-menu x-show="!open" class="w-6 h-6" />
-                    <x-lucide-x x-show="open" class="w-6 h-6" style="display: none;" />
-                </button>
-                <div x-show="open" @click.outside="open = false" x-transition class="absolute top-full left-0 right-0 mt-2 bg-slate-900/95 backdrop-blur-lg border-b border-slate-800 p-5 shadow-2xl space-y-4" style="display: none;">
-                    <a href="/" class="block text-slate-300 hover:text-white text-sm font-semibold py-2">Home</a>
-                    <a href="{{ route('products.index') }}" class="block text-slate-300 hover:text-white text-sm font-semibold py-2">Produk</a>
-                    <a href="{{ route('services.index') }}" class="block text-white text-sm font-semibold py-2">Layanan</a>
-                </div>
-            </div>
-        </div>
-    </header>
+    <x-site-navbar :settings="$settings" :navItems="$navItems" activePage="services" />
 
     <!-- Main Content Area -->
     <main class="py-8 max-w-7xl mx-auto px-6">
@@ -85,7 +47,7 @@
 
             <!-- Services Grid -->
             <section class="lg:col-span-9">
-                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     @forelse ($services as $service)
                         <div x-show="activeCategory === 'all' || activeCategory === '{{ $service->category?->slug }}'" 
                              x-transition.fade
@@ -99,11 +61,19 @@
                                 @endif
                             </div>
 
-                            <!-- Icon -->
-                            <div class="w-full h-32 md:h-40 relative flex items-center justify-center rounded-lg bg-slate-950 overflow-hidden p-4 mb-4 border border-slate-800/40">
-                                <div class="w-12 h-12 rounded-full bg-slate-900 border border-slate-800/60 flex items-center justify-center text-accent group-hover:scale-105 transition-transform duration-500">
-                                    <x-dynamic-component :component="'lucide-' . ($service->icon ?: 'activity')" class="w-6 h-6" />
-                                </div>
+                            <!-- Cover Image or Icon -->
+                            <div class="w-full h-32 md:h-40 relative rounded-lg bg-slate-950 overflow-hidden mb-4 border border-slate-800/40">
+                                @if ($service->getFirstMediaUrl('image'))
+                                    <img src="{{ $service->getFirstMediaUrl('image') }}"
+                                        alt="{{ $service->name }}"
+                                        class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]" />
+                                @else
+                                    <div class="w-full h-full flex items-center justify-center">
+                                        <div class="w-12 h-12 rounded-full bg-slate-900 border border-slate-800/60 flex items-center justify-center text-accent group-hover:scale-105 transition-transform duration-500">
+                                            <x-dynamic-component :component="'lucide-' . ($service->icon ?: 'activity')" class="w-6 h-6" />
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
 
                             <!-- Info Content -->

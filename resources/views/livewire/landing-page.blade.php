@@ -81,7 +81,7 @@
             <!-- CTA Button -->
             <div class="hidden md:flex items-center gap-4">
                 <a href="#contact"
-                    class="px-5 py-2.5 bg-gradient-to-r from-accent to-indigo-600 hover:from-accent/90 hover:to-indigo-600/90 text-white font-bold text-xs rounded-lg transition-all duration-300 shadow-md shadow-accent/10 hover:shadow-accent/20 hover:scale-[1.03]">
+                    class="px-5 py-2.5 bg-accent hover:bg-accent/90 text-white font-bold text-xs rounded-lg transition-all duration-300 shadow-md shadow-accent/10 hover:shadow-accent/20 hover:scale-[1.03]">
                     Hubungi Kami
                 </a>
             </div>
@@ -95,7 +95,7 @@
 
                 <!-- Mobile Menu Dropdown -->
                 <div x-show="open" @click.outside="open = false" x-transition
-                    class="absolute top-full left-0 right-0 mt-2 bg-primary/98 backdrop-blur-lg border border-slate-800 rounded-lg p-5 shadow-2xl space-y-4"
+                    class="absolute top-full left-0 right-0 mt-2 bg-slate-900 border border-slate-800 rounded-lg p-5 shadow-2xl space-y-4"
                     style="display: none;">
                     @foreach ($navItems as $item)
                         @if ($item->children->count() > 0)
@@ -512,12 +512,12 @@
                         balik keandalan platform kami.</p>
                 </div>
 
-                <!-- Grid -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Centered Flex Grid -->
+                <div class="flex flex-wrap justify-center gap-8 w-full">
                     @foreach ($team as $member)
                         <div x-data="{ shown: false }" x-intersect.margin.-10%="shown = true"
                             :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'"
-                            class="bg-white rounded-lg border border-slate-200 p-6 flex flex-col items-center text-center space-y-4 group transition-all duration-500 hover:shadow-md">
+                            class="bg-white rounded-lg border border-slate-200 p-6 flex flex-col items-center text-center space-y-4 group transition-all duration-500 hover:shadow-md w-full sm:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.5rem)] max-w-sm">
                             <!-- Image Grayscale to Color -->
                             <div
                                 class="w-28 h-28 rounded-full overflow-hidden bg-slate-200 border border-slate-300 shadow-inner flex-shrink-0 flex items-center justify-center font-bold text-slate-500 uppercase text-2xl relative">
@@ -668,7 +668,7 @@
 
     <!-- 10. CTA Kontak / Hubungi Kami (BAB 5, Section 9) -->
     <section id="contact"
-        class="py-20 md:py-28 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white relative overflow-hidden border-t border-slate-900">
+        class="py-20 md:py-28 bg-slate-950 text-white relative overflow-hidden border-t border-slate-900">
         <!-- Background Grid Effect -->
         <div
             class="absolute inset-0 bg-[linear-gradient(to_right,#0f172a_1px,transparent_1px),linear-gradient(to_bottom,#0f172a_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-35">
@@ -771,7 +771,7 @@
                     <!-- Submit -->
                     <div>
                         <button type="submit"
-                            class="w-full py-3.5 bg-gradient-to-r from-accent to-indigo-600 hover:from-accent/90 hover:to-indigo-600/90 text-white font-bold rounded-xl text-xs transition-all duration-300 shadow-md shadow-accent/10 hover:shadow-accent/25 hover:scale-[1.01] focus:outline-none">
+                            class="w-full py-3.5 bg-accent hover:bg-accent/90 text-white font-bold rounded-xl text-xs transition-all duration-300 shadow-md shadow-accent/10 hover:shadow-accent/25 hover:scale-[1.01] focus:outline-none">
                             <span wire:loading.remove wire:target="submitContact">Kirim Pesan</span>
                             <span wire:loading wire:target="submitContact"
                                 class="flex items-center justify-center gap-2">
@@ -783,6 +783,14 @@
                 </form>
             </div>
         </div>
+
+        @if (!empty($settings['google_maps_embed']))
+            <div class="max-w-7xl mx-auto px-6 mt-12 relative z-10">
+                <div class="rounded-2xl overflow-hidden border border-slate-800/80 shadow-2xl w-full h-[350px] relative [&_iframe]:w-full [&_iframe]:h-full [&_iframe]:border-0">
+                    {!! $settings['google_maps_embed'] !!}
+                </div>
+            </div>
+        @endif
     </section>
 
     <!-- 11. Footer (BAB 5, Section 10) -->

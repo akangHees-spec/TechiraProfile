@@ -3,30 +3,39 @@
 namespace App\Livewire;
 
 use App\Models\NavItem;
-use App\Models\Product;
+use App\Models\Post;
 use App\Models\Setting;
 use Livewire\Component;
+use Livewire\WithPagination;
 
-class ProductDetail extends Component
+class BlogIndex extends Component
 {
-    public $product;
+    use WithPagination;
 
-    public function mount($slug)
-    {
-        $this->product = Product::where('slug', $slug)
-            ->where('is_active', true)
-            ->with('category')
-            ->firstOrFail();
-    }
+    public $search = '';
 
-    public function trackWa()
+    protected $paginationTheme = 'tailwind';
+
+    public function updatingSearch(): void
     {
-        $this->product->increment('whatsapp_click_count');
-        $this->dispatch('redirect-to', url: $this->product->whatsapp_link);
+        $this->resetPage();
     }
 
     public function render()
     {
+        $query = Post::where('is_published', true);
+
+        if (! empty($this->search)) {
+            $query->where(function ($q) {
+                $q->where('title', 'like', '%'.$this->search.'%')
+                    ->orWhere('content', 'like', '%'.$this->search.'%');
+            });
+        }
+
+        $posts = $query->orderBy('published_at', 'desc')
+            ->orderBy('id', 'desc')
+            ->paginate(9);
+
         $settingsRaw = Setting::all()->pluck('value', 'key');
         $settings = [
             'company_name' => $settingsRaw['company_name'] ?? 'Techira Nusantara',
@@ -39,7 +48,8 @@ class ProductDetail extends Component
 
         $navItems = NavItem::where('is_active', true)->whereNull('parent_id')->orderBy('order')->get();
 
-        return view('livewire.product-detail', [
+        return view('livewire.blog-index', [
+            'posts' => $posts,
             'settings' => $settings,
             'navItems' => $navItems,
         ])->layout('components.layouts.guest');

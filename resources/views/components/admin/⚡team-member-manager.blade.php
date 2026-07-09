@@ -138,8 +138,7 @@ new class extends Component
         }
 
         if ($this->photoFile) {
-            $member->addMedia($this->photoFile->getRealPath())
-                ->usingFileName($this->photoFile->getClientOriginalName())
+            $member->addMedia($this->photoFile)
                 ->toMediaCollection('photo');
         }
 

@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\NavItem;
 use App\Models\Service;
 use App\Models\Setting;
 use Livewire\Component;
@@ -36,8 +37,11 @@ class ServiceDetail extends Component
             'youtube_url' => $settingsRaw['youtube_url'] ?? '#',
         ];
 
+        $navItems = NavItem::where('is_active', true)->whereNull('parent_id')->orderBy('order')->get();
+
         return view('livewire.service-detail', [
             'settings' => $settings,
+            'navItems' => $navItems,
         ])->layout('components.layouts.guest');
     }
 }
