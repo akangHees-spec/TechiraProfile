@@ -272,7 +272,7 @@ class DatabaseSeeder extends Seeder
                 ['title' => $slData['title']],
                 $slData
             );
-            
+
             // Add seed image to Slider
             if ($slider->order === 1 && file_exists(public_path('seed-images/hero.png'))) {
                 $slider->clearMediaCollection('image');
@@ -443,14 +443,34 @@ class DatabaseSeeder extends Seeder
                 'is_active' => true,
             ],
         ];
-
         foreach ($partnersData as $prData) {
-            Partner::updateOrCreate(
+            $partner = Partner::updateOrCreate(
                 ['name' => $prData['name']],
                 $prData
             );
-        }
 
+            if ($partner->name === 'Amazon Web Services' && file_exists(public_path('seed-images/aws.svg'))) {
+                $partner->clearMediaCollection('logo');
+                $partner->addMedia(public_path('seed-images/aws.svg'))
+                    ->preservingOriginal()
+                    ->toMediaCollection('logo');
+            } elseif ($partner->name === 'Google Cloud Platform' && file_exists(public_path('seed-images/gcp.svg'))) {
+                $partner->clearMediaCollection('logo');
+                $partner->addMedia(public_path('seed-images/gcp.svg'))
+                    ->preservingOriginal()
+                    ->toMediaCollection('logo');
+            } elseif ($partner->name === 'Microsoft Azure' && file_exists(public_path('seed-images/azure.svg'))) {
+                $partner->clearMediaCollection('logo');
+                $partner->addMedia(public_path('seed-images/azure.svg'))
+                    ->preservingOriginal()
+                    ->toMediaCollection('logo');
+            } elseif ($partner->name === 'Alibaba Cloud' && file_exists(public_path('seed-images/alibaba.svg'))) {
+                $partner->clearMediaCollection('logo');
+                $partner->addMedia(public_path('seed-images/alibaba.svg'))
+                    ->preservingOriginal()
+                    ->toMediaCollection('logo');
+            }
+        }
         // 12. FAQs
         $faqsData = [
             [

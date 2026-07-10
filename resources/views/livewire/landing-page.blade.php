@@ -244,15 +244,11 @@
                             width: max-content;
                             animation: marquee 25s linear infinite;
                         }
-
-                        .animate-marquee-logos:hover {
-                            animation-play-state: paused;
-                        }
                     </style>
                     <div class="animate-marquee-logos gap-16 items-center">
                         @foreach ($partners->concat($partners) as $partner)
                             <a href="{{ $partner->website_url ?: '#' }}" target="_blank"
-                                class="w-32 h-10 flex items-center justify-center opacity-45 filter grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-300 flex-shrink-0">
+                                class="w-32 h-10 flex items-center justify-center opacity-85 hover:opacity-100 transition-all duration-300 flex-shrink-0">
                                 @if ($partner->getFirstMediaUrl('logo'))
                                     <img src="{{ $partner->getFirstMediaUrl('logo') }}" alt="{{ $partner->name }}"
                                         class="max-w-full max-h-full object-contain" />
@@ -878,27 +874,87 @@
             if (str_starts_with($cleanWa, '0')) {
                 $cleanWa = '62' . substr($cleanWa, 1);
             }
-            $waUrl =
-                'https://wa.me/' .
-                $cleanWa .
-                '?text=' .
-                urlencode(
-                    str_replace(
-                        ['{name}', '{url}'],
-                        ['Layanan Konsultasi', url('/')],
-                        $settings['whatsapp_message_template'],
-                    ),
-                );
+            $waUrl = 'https://wa.me/' . $cleanWa . '?text=' . urlencode(str_replace(['{name}', '{url}'], ['Layanan Konsultasi', url('/')], $settings['whatsapp_message_template']));
         @endphp
-        <a href="{{ $waUrl }}" target="_blank"
-            class="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-[#25D366] hover:bg-[#20BA56] text-white px-5 py-3.5 rounded-full shadow-2xl transition-all duration-300 hover:scale-105 group font-bold text-sm">
-            <x-lucide-phone-call class="w-5 h-5 animate-pulse text-white" />
-            <span>Konsultasi WhatsApp</span>
-            <span class="absolute top-0 right-0 flex h-3 w-3 -mt-1 -mr-1">
-                <span
-                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-            </span>
-        </a>
+        <div x-data="{ showConfirm: false }">
+            <!-- Button -->
+            <button 
+                @click="showConfirm = true"
+                type="button"
+                class="fixed bottom-6 right-6 z-50 rounded-full shadow-2xl transition-all duration-300 hover:scale-110 focus:outline-none text-white"
+                style="width: 56px; height: 56px; background-color: #25D366; display: flex; align-items: center; justify-content: center;"
+                title="Konsultasi WhatsApp"
+            >
+                <svg class="fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width: 28px; height: 28px;">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
+                </svg>
+                <span style="position: absolute; top: -1px; right: -1px; display: flex; width: 14px; height: 14px;">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-red-500"></span>
+                </span>
+            </button>
+
+            <!-- Modal Backdrop -->
+            <div 
+                x-show="showConfirm" 
+                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100"
+                x-transition:leave="transition ease-in duration-200"
+                x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"
+                class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                style="display: none;"
+                @click="showConfirm = false"
+            >
+                <!-- Modal Card -->
+                <div 
+                    x-show="showConfirm"
+                    x-transition:enter="transition ease-out duration-300 transform"
+                    x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+                    x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                    x-transition:leave="transition ease-in duration-200 transform"
+                    x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                    x-transition:leave-end="opacity-0 scale-95 translate-y-4"
+                    class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-xs p-5 shadow-2xl relative space-y-5"
+                    @click.stop
+                >
+                    <!-- Close button -->
+                    <button @click="showConfirm = false" class="absolute top-3.5 right-3.5 text-slate-400 hover:text-white transition-colors focus:outline-none">
+                        <x-lucide-x class="w-4 h-4" />
+                    </button>
+
+                    <!-- Icon & Title -->
+                    <div class="flex flex-col items-center text-center space-y-3">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width: 56px; height: 56px; fill: #25D366;">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
+                        </svg>
+                        <h3 class="font-extrabold text-white text-base">Mulai Konsultasi?</h3>
+                        <p class="text-[11px] text-slate-400 leading-relaxed max-w-[200px]">
+                            Hubungi tim ahli kami sekarang via WhatsApp untuk konsultasi gratis.
+                        </p>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex flex-col gap-2 pt-2">
+                        <a 
+                            href="{{ $waUrl }}"
+                            target="_blank"
+                            @click="showConfirm = false"
+                            class="w-full flex items-center justify-center py-2.5 bg-[#25D366] hover:bg-[#20BA56] text-white font-extrabold text-[11px] uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-[#25D366]/10"
+                        >
+                            <span>Hubungi WhatsApp</span>
+                        </a>
+                        <button 
+                            @click="showConfirm = false"
+                            type="button"
+                            class="w-full py-2.5 bg-slate-800 hover:bg-slate-750 text-slate-400 font-extrabold text-[11px] uppercase tracking-wider rounded-xl transition-colors border border-slate-700/40"
+                        >
+                            Batal
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     @endif
 </div>

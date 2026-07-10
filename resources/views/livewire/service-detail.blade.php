@@ -14,11 +14,17 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
             
-            <!-- Left Side: Icon -->
-            <div class="bg-slate-900 border border-slate-800/80 rounded-xl p-8 flex items-center justify-center relative shadow-lg shadow-black/25">
-                <div class="w-28 h-28 rounded-full bg-slate-850 flex items-center justify-center border-4 border-slate-700 shadow-inner">
-                    <x-dynamic-component :component="'lucide-' . ($service->icon ?: 'activity')" class="w-12 h-12 text-accent" />
-                </div>
+            <!-- Left Side: Image / Icon -->
+            <div class="w-full aspect-[16/10] bg-slate-900 border border-slate-800/80 rounded-xl overflow-hidden flex items-center justify-center relative shadow-lg shadow-black/25">
+                @if ($service->getFirstMediaUrl('image'))
+                    <img src="{{ $service->getFirstMediaUrl('image') }}"
+                        alt="{{ $service->name }}"
+                        class="w-full h-full object-cover" />
+                @else
+                    <div class="w-28 h-28 rounded-full bg-slate-850 flex items-center justify-center border-4 border-slate-700 shadow-inner">
+                        <x-dynamic-component :component="'lucide-' . ($service->icon ?: 'activity')" class="w-12 h-12 text-accent" />
+                    </div>
+                @endif
             </div>
 
             <!-- Right Side: Details -->
