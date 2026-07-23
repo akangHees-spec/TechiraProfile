@@ -495,74 +495,255 @@
         </section>
     @endif
 
-    <!-- 7. Tim Kami (BAB 5, Section 6) -->
+    <!-- 7. Tim Kami — SLIDESHOW CAROUSEL -->
     @if ($team->isNotEmpty())
-        <section id="team" class="py-20 md:py-28 bg-slate-50 border-y border-slate-200">
+        @php
+            $teamMembersData = [];
+            foreach ($team as $m) {
+                $teamMembersData[] = [
+                    'name'     => $m->name,
+                    'position' => $m->position,
+                    'bio'      => $m->bio ?? '',
+                    'photo'    => $m->getFirstMediaUrl('photo'),
+                    'initials' => mb_strtoupper(mb_substr($m->name, 0, 2)),
+                    'social'   => [
+                        'linkedin'  => $m->social_links['linkedin']  ?? null,
+                        'github'    => $m->social_links['github']    ?? null,
+                        'instagram' => $m->social_links['instagram'] ?? null,
+                        'facebook'  => $m->social_links['facebook']  ?? null,
+                    ],
+                ];
+            }
+        @endphp
+
+        <script>
+            document.addEventListener('alpine:init', () => {
+                Alpine.data('teamSlider', () => ({
+                    members: @json($teamMembersData),
+                    active: 0,
+                    visible: true,
+                    paused: false,
+                    timer: null,
+                    get current() { return this.members[this.active] || {}; },
+                    get count() { return this.members.length; },
+                    goTo(index) {
+                        if (index === this.active) return;
+                        this.visible = false;
+                        setTimeout(() => {
+                            this.active = ((index % this.count) + this.count) % this.count;
+                            this.visible = true;
+                            this.$nextTick(() => {
+                                const row = this.$refs.avatarRow;
+                                if (row) {
+                                    const btn = row.querySelector('[data-idx=\'' + this.active + '\']');
+                                    if (btn) btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                                }
+                            });
+                        }, 200);
+                    },
+                    prev() { this.goTo(this.active - 1); },
+                    next() { this.goTo(this.active + 1); },
+                    startAuto() {
+                        this.timer = setInterval(() => { if (!this.paused) this.next(); }, 6000);
+                    },
+                    init() {
+                        this.startAuto();
+                    }
+                }));
+            });
+        </script>
+
+        <section id="team" class="py-20 md:py-28 bg-[#F8FAFC] border-y border-slate-200">
             <div class="max-w-7xl mx-auto px-6">
-                <!-- Header -->
-                <div class="text-center max-w-3xl mx-auto mb-16 space-y-3">
-                    <span class="text-xs font-bold text-accent uppercase tracking-widest">Struktur Tim</span>
-                    <h2 class="text-3xl md:text-4xl font-extrabold text-primary tracking-tight font-sans">Para Ahli &
-                        Pengembang Profesional</h2>
-                    <p class="text-sm text-slate-500">Mengenal lebih dekat tim software engineer dan cloud architect di
-                        balik keandalan platform kami.</p>
+
+                <!-- Header Section -->
+                <div class="text-center max-w-2xl mx-auto mb-14">
+                    <span class="text-xs font-bold text-[#2563EB] uppercase tracking-widest">Struktur Tim</span>
+                    <h2 class="text-3xl md:text-4xl font-extrabold text-[#0F172A] tracking-tight mt-3 mb-3">
+                        Para Ahli & Pengembang Profesional
+                    </h2>
+                    <p class="text-sm text-[#64748B] leading-relaxed">
+                        Mengenal lebih dekat tim software engineer dan cloud architect di balik keandalan platform kami.
+                    </p>
                 </div>
 
-                <!-- Centered Flex Grid -->
-                <div class="flex flex-wrap justify-center gap-8 w-full">
-                    @foreach ($team as $member)
-                        <div x-data="{ shown: false }" x-intersect.margin.-10%="shown = true"
-                            :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'"
-                            class="bg-white rounded-lg border border-slate-200 p-6 flex flex-col items-center text-center space-y-4 group transition-all duration-500 hover:shadow-md w-full sm:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.5rem)] max-w-sm">
-                            <!-- Image Grayscale to Color -->
-                            <div
-                                class="w-28 h-28 rounded-full overflow-hidden bg-slate-200 border border-slate-300 shadow-inner flex-shrink-0 flex items-center justify-center font-bold text-slate-500 uppercase text-2xl relative">
-                                @if ($member->getFirstMediaUrl('photo'))
-                                    <img src="{{ $member->getFirstMediaUrl('photo') }}" alt="{{ $member->name }}"
-                                        class="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-500" />
-                                @else
-                                    {{ substr($member->name, 0, 2) }}
-                                @endif
-                            </div>
+                <!-- Alpine Carousel Root -->
+                <div
+                    x-data="teamSlider"
+                    @mouseenter="paused = true"
+                    @mouseleave="paused = false"
+                    class="flex flex-col gap-10"
+                >
 
-                            <div>
-                                <h4 class="text-base font-bold text-primary">{{ $member->name }}</h4>
-                                <p class="text-xs text-accent mt-1 font-semibold">{{ $member->position }}</p>
-                            </div>
+                    <!-- Featured Member Container -->
+                    <div class="relative">
+                        <div
+                            x-show="visible"
+                            x-transition:enter="transition ease-out duration-300"
+                            x-transition:enter-start="opacity-0 scale-95"
+                            x-transition:enter-end="opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-150"
+                            x-transition:leave-start="opacity-100 scale-100"
+                            x-transition:leave-end="opacity-0 scale-95"
+                            class="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center"
+                        >
 
-                            @if ($member->bio)
-                                <p class="text-xs text-slate-500 leading-relaxed max-w-xs line-clamp-3">
-                                    {{ $member->bio }}
+                            <!-- Kolom Kiri: Informasi Member -->
+                            <div class="order-2 md:order-1 flex flex-col gap-5 min-h-[340px] justify-center">
+
+                                <!-- Breadcrumb -->
+                                <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">
+                                    Tim <span class="text-[#2563EB] mx-1">/</span>
+                                    <span x-text="current.name"></span>
                                 </p>
-                            @endif
 
-                            <!-- Social links -->
-                            @if (!empty($member->social_links))
-                                <div class="flex items-center gap-3 pt-2 text-slate-400">
-                                    @if (isset($member->social_links['facebook']))
-                                        <a href="{{ $member->social_links['facebook'] }}" target="_blank"
-                                            class="hover:text-accent transition-colors"><x-lucide-facebook
-                                                class="w-4 h-4" /></a>
-                                    @endif
-                                    @if (isset($member->social_links['instagram']))
-                                        <a href="{{ $member->social_links['instagram'] }}" target="_blank"
-                                            class="hover:text-accent transition-colors"><x-lucide-instagram
-                                                class="w-4 h-4" /></a>
-                                    @endif
-                                    @if (isset($member->social_links['linkedin']))
-                                        <a href="{{ $member->social_links['linkedin'] }}" target="_blank"
-                                            class="hover:text-accent transition-colors"><x-lucide-linkedin
-                                                class="w-4 h-4" /></a>
-                                    @endif
-                                    @if (isset($member->social_links['github']))
-                                        <a href="{{ $member->social_links['github'] }}" target="_blank"
-                                            class="hover:text-accent transition-colors"><x-lucide-github
-                                                class="w-4 h-4" /></a>
+                                <!-- Nama & Jabatan -->
+                                <div>
+                                    <h3 class="text-3xl md:text-4xl font-extrabold text-[#0F172A] leading-tight"
+                                        x-text="current.name"></h3>
+                                    <p class="text-base font-bold text-[#2563EB] mt-1.5"
+                                        x-text="current.position"></p>
+                                </div>
+
+                                <!-- Social Media Links -->
+                                <div class="flex items-center gap-3">
+                                    <template x-if="current.social && current.social.linkedin">
+                                        <a :href="current.social.linkedin" target="_blank" rel="noopener"
+                                            class="w-9 h-9 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 hover:text-[#2563EB] hover:border-[#2563EB] transition-all duration-150">
+                                            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/></svg>
+                                        </a>
+                                    </template>
+                                    <template x-if="current.social && current.social.github">
+                                        <a :href="current.social.github" target="_blank" rel="noopener"
+                                            class="w-9 h-9 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 hover:text-[#2563EB] hover:border-[#2563EB] transition-all duration-150">
+                                            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2z"/></svg>
+                                        </a>
+                                    </template>
+                                    <template x-if="current.social && current.social.instagram">
+                                        <a :href="current.social.instagram" target="_blank" rel="noopener"
+                                            class="w-9 h-9 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 hover:text-[#2563EB] hover:border-[#2563EB] transition-all duration-150">
+                                            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M7.8 2h8.4C19.4 2 22 4.6 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8C4.6 22 2 19.4 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2m-.2 2A3.6 3.6 0 0 0 4 7.6v8.8C4 18.39 5.61 20 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6C20 5.61 18.39 4 16.4 4H7.6m9.65 1.5a1.25 1.25 0 0 1 1.25 1.25A1.25 1.25 0 0 1 17.25 8 1.25 1.25 0 0 1 16 6.75a1.25 1.25 0 0 1 1.25-1.25M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5-5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/></svg>
+                                        </a>
+                                    </template>
+                                    <template x-if="current.social && current.social.facebook">
+                                        <a :href="current.social.facebook" target="_blank" rel="noopener"
+                                            class="w-9 h-9 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 hover:text-[#2563EB] hover:border-[#2563EB] transition-all duration-150">
+                                            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 2.04C6.5 2.04 2 6.53 2 12.06C2 17.06 5.66 21.21 10.44 21.96V14.96H7.9V12.06H10.44V9.85C10.44 7.34 11.93 5.96 14.22 5.96C15.31 5.96 16.45 6.15 16.45 6.15V8.62H15.19C13.95 8.62 13.56 9.39 13.56 10.18V12.06H16.34L15.89 14.96H13.56V21.96A10 10 0 0 0 22 12.06C22 6.53 17.5 2.04 12 2.04z"/></svg>
+                                        </a>
+                                    </template>
+                                </div>
+
+                                <!-- Bio -->
+                                <p class="text-sm sm:text-base text-[#64748B] leading-relaxed"
+                                    x-text="current.bio || 'Bio belum tersedia.'"></p>
+
+                                <!-- Posisi Indikator (01 / 04) -->
+                                <div class="flex items-baseline gap-2 pt-3 border-t border-slate-100">
+                                    <span class="text-3xl md:text-4xl font-black text-[#2563EB]/20 leading-none select-none tabular-nums"
+                                        x-text="String(active + 1).padStart(2, '0')"></span>
+                                    <span class="text-xs text-slate-400 font-semibold"
+                                        x-text="'/ ' + String(count).padStart(2, '0')"></span>
+                                </div>
+                            </div>
+
+                            <!-- Kolom Kanan: Foto Potret Utama (Strict Outer Bounds) -->
+                            <div class="order-1 md:order-2 relative flex justify-center">
+                                <!-- Backdrop Glow Background -->
+                                <div class="absolute inset-0 flex items-center justify-center pointer-events-none" aria-hidden="true">
+                                    <div class="w-72 h-72 bg-[#2563EB] rounded-full blur-3xl opacity-[0.08]"></div>
+                                </div>
+
+                                <!-- Box Pembungkus Utama Foto (Aspek Potret 3:4 dengan rounded-2xl & overflow-hidden ketat) -->
+                                <div class="relative w-full max-w-xs md:max-w-sm aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl border border-slate-200/60 bg-[#0F1B3D]">
+                                    <template x-if="current.photo">
+                                        <img
+                                            :src="current.photo"
+                                            :alt="current.name"
+                                            class="w-full h-full object-cover object-top block"
+                                        />
+                                    </template>
+                                    <template x-if="!current.photo">
+                                        <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#0F1B3D] to-[#1E3A8A]">
+                                            <span class="text-6xl font-black text-white/30 uppercase select-none"
+                                                x-text="current.initials"></span>
+                                        </div>
+                                    </template>
+                                    <!-- Gradasi Tint Halus di Bawah Foto -->
+                                    <div class="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-[#0F1B3D]/30 to-transparent pointer-events-none"></div>
+                                </div>
+
+                                <!-- Tombol Navigasi Panah Kiri -->
+                                <button
+                                    type="button"
+                                    @click.prevent="prev()"
+                                    class="absolute left-0 md:-left-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white border border-slate-200 shadow-xl flex items-center justify-center text-slate-600 hover:text-[#2563EB] hover:border-[#2563EB] hover:scale-110 transition-all duration-150 focus:outline-none"
+                                    aria-label="Anggota sebelumnya"
+                                >
+                                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                                </button>
+
+                                <!-- Tombol Navigasi Panah Kanan -->
+                                <button
+                                    type="button"
+                                    @click.prevent="next()"
+                                    class="absolute right-0 md:-right-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white border border-slate-200 shadow-xl flex items-center justify-center text-slate-600 hover:text-[#2563EB] hover:border-[#2563EB] hover:scale-110 transition-all duration-150 focus:outline-none"
+                                    aria-label="Anggota berikutnya"
+                                >
+                                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                                </button>
+
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Baris Selector Avatar (Bulat Kecil di Bawah) -->
+                    <div
+                        x-ref="avatarRow"
+                        class="flex items-start gap-5 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                    >
+                        @foreach ($teamMembersData as $member)
+                            @php $idx = $loop->index; @endphp
+                            <button
+                                type="button"
+                                data-idx="{{ $idx }}"
+                                @click.prevent="goTo({{ $idx }})"
+                                class="flex flex-col items-center gap-2 flex-shrink-0 focus:outline-none rounded-full"
+                                :style="active === {{ $idx }} ? 'opacity: 1; filter: none;' : 'opacity: 0.5; filter: grayscale(100%);'"
+                                style="transition: opacity 250ms ease, filter 250ms ease;"
+                            >
+                                <div
+                                    class="rounded-full overflow-hidden flex items-center justify-center font-bold text-white uppercase text-sm flex-shrink-0"
+                                    :class="active === {{ $idx }}
+                                        ? 'w-16 h-16 ring-2 ring-offset-2 ring-[#2563EB] shadow-lg shadow-[#2563EB]/20'
+                                        : 'w-14 h-14'"
+                                    style="background-color: #0F1B3D; transition: width 200ms ease, height 200ms ease, box-shadow 200ms ease;"
+                                >
+                                    @if ($member['photo'])
+                                        <img
+                                            src="{{ $member['photo'] }}"
+                                            alt="{{ $member['name'] }}"
+                                            class="w-full h-full object-cover object-top"
+                                            loading="lazy"
+                                        />
+                                    @else
+                                        {{ $member['initials'] }}
                                     @endif
                                 </div>
-                            @endif
-                        </div>
-                    @endforeach
+
+                                <div class="text-center w-[76px]">
+                                    <p
+                                        class="text-xs leading-tight truncate"
+                                        :class="active === {{ $idx }} ? 'font-bold text-[#0F172A]' : 'font-medium text-slate-400'"
+                                    >{{ explode(' ', $member['name'])[0] }}</p>
+                                    <p class="text-[10px] text-slate-400 truncate mt-0.5 leading-tight">
+                                        {{ mb_substr($member['position'], 0, 14) }}{{ mb_strlen($member['position']) > 14 ? '…' : '' }}
+                                    </p>
+                                </div>
+                            </button>
+                        @endforeach
+                    </div>
+
                 </div>
             </div>
         </section>
